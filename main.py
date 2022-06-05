@@ -4,8 +4,9 @@
 # Tasks:
 # - Write all functions for handling all functionality
 # - Use the JSON file as a database
-# - Allow edits to the JSONM file directly
+# - Allow edits to the JSON file directly
 # - Write unit tests for every function (unit)
+# - Write a README.md file for the repository that documents the project
 # - Write a CI pipeline (GitHub Actions) for running tests
 # - Incorporate a Flask API to make the functionality avalable over HTTP(S)
 # - Write tests to check HTTP handlers work
