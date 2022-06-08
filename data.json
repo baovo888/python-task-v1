@@ -1,10 +1,19 @@
 {
-  "meta": {
-    "last_update": null
-  },
-  "items": [
-    "Buy milk",
-    "Sell car",
-    "Learn Python"
-  ]
+    "meta": {
+        "last_update": null
+    },
+    "items": [
+        {
+            "task": "Buy Milk",
+            "status": "DONE"
+        },
+        {
+            "task": "Sell car",
+            "status": "DONE"
+        },
+        {
+            "task": "Learn Python",
+            "status": "DONE"
+        }
+    ]
 }
