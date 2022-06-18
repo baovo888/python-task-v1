@@ -4,16 +4,16 @@
     },
     "items": [
         {
-            "task": "Buy Milk",
-            "status": "DONE"
+            "task": "Buy milk",
+            "status": "TO_DO"
         },
         {
             "task": "Sell car",
-            "status": "DONE"
+            "status": "TO_DO"
         },
         {
-            "task": "Learn Python",
-            "status": "DONE"
+            "task": "New Task",
+            "status": "TO_DO"
         }
     ]
 }

@@ -1,2 +1,4 @@
 .vscode/
 mockup/
+*.pyc
+*.pyo

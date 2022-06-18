@@ -2,10 +2,10 @@
 # Author: Michael Crilly (upload.academy)
 # Objective: write a simple todo list handler using Python + JSON
 # Tasks:
-# - Write all functions for handling all functionality
-# - Use the JSON file as a database
-# - Allow edits to the JSON file directly
-# - Write unit tests for every function (unit)
+# x Write all functions for handling all functionality
+# x Use the JSON file as a database
+# x Allow edits to the JSON file directly
+# x Write unit tests for every function (unit)
 # - Write a README.md file for the repository that documents the project
 # - Write a CI pipeline (GitHub Actions) for running tests
 # - Incorporate a Flask API to make the functionality avalable over HTTP(S)
@@ -13,7 +13,9 @@
 # - Write CD pipeline (GitHub Actions) to deploy to
 import json
 import argparse
+import string
 
+SUCCESS_STATUS = "Success"
 
 def open_file():
     with open("data.json") as fd:
@@ -34,6 +36,8 @@ def print_items(data):
 
 
 def add_item(data, new_task):
+    print(data)
+    print(type(data))
     # Validate input item
     errorMsg = validate_add_input(new_task)
     if errorMsg != None:
@@ -46,7 +50,7 @@ def add_item(data, new_task):
         }
     )
     update_file(updated_data)
-    return 'Success - Add new task'
+    return SUCCESS_STATUS
 
 
 def complete_item(data, id):
@@ -65,14 +69,12 @@ def complete_item(data, id):
     # Sync updated data
     update_file(updated_data)
 
-    return f'Success - Complete Task #{id}'
+    return SUCCESS_STATUS
 
 
 def delete_item(data, id):
     # Validate input id
-    errorMsg = validate_edit_id(data, id)
-    if errorMsg != None:
-        return errorMsg
+    validate_edit_id(data, id)
     # list index is offset by 1 with task id
     task_index = int(id) - 1
     updated_data = data.copy()
@@ -81,28 +83,33 @@ def delete_item(data, id):
     # Sync updated data
     update_file(updated_data)
 
+    return SUCCESS_STATUS
+
 
 def validate_edit_id(data, id):
-    errorMsg = None
+    if not isinstance(id, str):
+        raise TypeError('The task id must be index number in string format')
+
     # Check if task list is not empty
     if len(data["items"]) == 0:
-        errorMsg = 'Task list is empty'
+        raise ValueError('The task list is empty, cannot edit or delete')
+
     # Check id must be valid positive integer:
-    elif not id.isdigit():
-        errorMsg = 'Invalid input provide. ID must be a valid digit number'
+    if not id.isdigit():
+        raise ValueError('Invalid input provide. ID must be a valid digit number')
+
     # Check id must be in valid range
-    elif int(id) not in range(1, len(data["items"])+1):
-        errorMsg = f'Input ID is out of range. ID must be between 1 & {len(data["items"])}'
-    return errorMsg
+    if int(id) not in range(1, len(data["items"])+1):
+        raise ValueError(f'Input ID is out of range. ID must be between 1 & {len(data["items"])}')
 
 
 def validate_add_input(item):
-    errorMsg = None
-    if type(item) != str:
-        errorMsg = "Add input must be in string format"
-    elif item.isspace():
-        errorMsg = "Input task cannot be empty string or only blank space"
-    return errorMsg
+    if not isinstance(item, str):
+        raise TypeError("The task input must be string")
+    if item.isspace():
+        raise ValueError("Input task cannot be only blank space")
+    if len(item) == 0:
+        raise ValueError("Input task cannot be empty string")
 
 
 def main():
@@ -110,9 +117,11 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--add", help="Adds a new item to the list")
-    parser.add_argument("--done", help="Marks an item has done")
-    parser.add_argument("--delete", help="Deletes an items from the list")
+    parser.add_argument("--done", help="Enter task ID to mark an item as done")
+    parser.add_argument("--delete", help="Enter task ID to delete an item from the list")
     args = parser.parse_args()
+    # DONE: read arguments and determine what to do
+    # DONE: write functions to deal with each argument
     print("--BEFORE--")
     print_items(data)
     if(args.add):
@@ -124,13 +133,9 @@ def main():
     if(args.delete):
         task_status = delete_item(data, args.delete)
         print(task_status)
-    # else:
-    #   print('add is empty')
     print("--AFTER--")
     print_items(data)
-    # print(args)
-    # TODO: read arguments and determine what to do
-    # TODO: write functions to deal with each argument
+
 
 
 if __name__ == "__main__":
