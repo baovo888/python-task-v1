@@ -42,4 +42,4 @@ jobs:
         ls ${{ github.workspace }}
     - name: Run unit testing
       run: |
-        python -m unittest -v test_main.py
+        python -m unittest -v test_to_do.py
