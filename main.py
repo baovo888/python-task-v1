@@ -9,7 +9,7 @@
 # - Write a README.md file for the repository that documents the project
 # x Write a CI pipeline (GitHub Actions) for running tests
 # x Incorporate a Flask API to make the functionality avalable over HTTP(S)
-# - Write tests to check HTTP handlers work
+# x Write tests to check HTTP handlers work
 # - Write CD pipeline (GitHub Actions) to deploy to AWS
 
 import argparse
@@ -42,7 +42,7 @@ def create_flask_app(config=None):
     @app.route("/todo", methods=["GET"])
     def get_all_tasks():
         try:
-            jsonify(to_do.get_all_items_with_task_index())
+            return jsonify(to_do.get_all_items_with_task_index())
         except Exception as error:
             return error, 400
 
@@ -50,7 +50,7 @@ def create_flask_app(config=None):
     @app.route("/todo/<task_id>", methods=["GET"])
     def get_task_by_id(task_id):
         try:
-            jsonify(to_do.get_item_by_id(task_id))
+            return jsonify(to_do.get_item_by_id(task_id))
         except Exception as error:
             return error, 400
 
@@ -84,7 +84,7 @@ def create_flask_app(config=None):
 
     # Delete task
 
-    @app.route("/todo/delete/<task_id>")
+    @app.route("/todo/delete/<task_id>", methods=["POST", "GET"])
     def delete_task(task_id):
         try:
             to_do.delete_item(str(task_id))

@@ -40,6 +40,9 @@ jobs:
     - name: List files in the repository
       run: |
         ls ${{ github.workspace }}
-    - name: Run unit testing
+    - name: Run unit testing on to_do backend
       run: |
         python -m unittest -v test_to_do.py
+    - name: Run unit testing on Flask API
+      run: |
+        python -m unittest -v test_main.py
