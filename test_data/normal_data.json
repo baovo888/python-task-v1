@@ -1,0 +1,19 @@
+{
+    "meta": {
+        "last_update": null
+    },
+    "items": [
+        {
+            "task": "Sell car",
+            "status": "TO_DO"
+        },
+        {
+            "task": "Learn Python",
+            "status": "TO_DO"
+        },
+        {
+            "task": "Do homework",
+            "status": "TO_DO"
+        }
+    ]
+}

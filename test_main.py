@@ -3,139 +3,136 @@ Test module for main.py
 """
 import unittest
 import main
-from main import SUCCESS_STATUS
-
-sample_json_data = {
-    'meta': {'last_update': None},
-    'items': [
-        {'task': 'Buy milk', 'status': 'TO_DO'},
-        {'task': 'Sell car', 'status': 'TO_DO'},
-        {'task': 'Learn Python', 'status': 'TO_DO'}
-    ]
-}
-
-sample_empty_list = {
-    'meta': {'last_update': None},
-    'items': []
-}
+import json
 
 
-class TestMain(unittest.TestCase):
-    """
-    Test the function add_item
-    """
+class Test_main(unittest.TestCase):
+    API_URL = "http://127.0.0.1:8000"
 
-    def test_add_item_invalid_task_index_as_number(self):
-        with self.assertRaises(TypeError):
-            main.add_item(sample_json_data, 5)
-
-    def test_add_item_invalid_task_index_as_list(self):
-        with self.assertRaises(TypeError):
-            main.add_item(sample_json_data, [])
-
-    def test_add_item_success(self):
-        self.assertEqual(main.add_item(sample_json_data, 'New Task'), SUCCESS_STATUS)
+    def setUp(self):
+        app = main.create_flask_app()
+        app.debug = True
+        self.app = app.test_client()
 
     """
-    Test the function complete_item
+    Test homepage and Get task endpoint
     """
+    def test_homepage_view(self):
+        res = self.app.get("/")
+        assert res.status_code == 200
 
-    def test_complete_item_invalid_task_index_as_number(self):
-        with self.assertRaises(TypeError):
-            main.complete_item(sample_json_data, 5)
+    def test_nonexist_endpoint(self):
+        res = self.app.get("/doesntexist")
+        assert res.status_code == 404
 
-    def test_complete_item_invalid_task_index_as_list(self):
-        with self.assertRaises(TypeError):
-            main.complete_item(sample_json_data, [])
-
-    def test_complete_item_task_index_out_of_range(self):
-        with self.assertRaises(ValueError):
-            main.complete_item(sample_json_data, '8')
-
-    def test_complete_item_on_empty_list(self):
-        with self.assertRaises(ValueError):
-            main.complete_item(sample_empty_list, '2')
-
-    def test_complete_item_success(self):
-        self.assertEqual(main.complete_item(
-            sample_json_data, '3'), SUCCESS_STATUS)
+    def test_todo_get_all(self):
+        res = self.app.get("/todo")
+        assert res.status_code == 200
 
     """
-    Test the function delete_item
+    Test Adding feature
     """
+    def test_todo_add(self):
+        payload = {"task": "new task"}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        res = self.app.post("/todo/add",headers=headers, data=payload)
+        assert res.status_code == 302
 
-    def test_delete_item_invalid_task_index_as_number(self):
-        with self.assertRaises(TypeError):
-            main.delete_item(sample_json_data, 5)
+    def test_todo_add_with_empty_data(self):
+        payload = {"task": ""}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        res = self.app.post("/todo/add",headers=headers, data=payload)
+        assert res.status_code == 400
 
-    def test_delete_item_invalid_task_index_as_list(self):
-        with self.assertRaises(TypeError):
-            main.delete_item(sample_json_data, [])
-
-    def test_delete_item_task_index_out_of_range(self):
-        with self.assertRaises(ValueError):
-            main.delete_item(sample_json_data, '8')
-
-    def test_delete_item_on_empty_list(self):
-        with self.assertRaises(ValueError):
-            main.delete_item(sample_empty_list, '2')
-
-    def test_delete_item_success(self):
-        self.assertEqual(main.delete_item(
-            sample_json_data, '3'), SUCCESS_STATUS)
+    def test_todo_add_with_spaces_only(self):
+        payload = {"task": "   "}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        res = self.app.post("/todo/add",headers=headers, data=payload)
+        assert res.status_code == 400
 
     """
-    Test the function validate_edit_id
+    Test Completing feature
     """
 
-    def test_validate_edit_id_invalid_task_index_as_number(self):
-        with self.assertRaises(TypeError):
-            main.validate_edit_id(sample_json_data, 5)
+    def test_completing_feature(self):
+        # Add one new task to end of list
+        payload = {"task": "TestTask"}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        self.app.post("/todo/add", headers=headers, data=payload)
 
-    def test_validate_edit_id_invalid_task_index_as_list(self):
-        with self.assertRaises(TypeError):
-            main.validate_edit_id(sample_json_data, [])
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        last_task = json.loads(res.text)[-1]
 
-    def test_validate_edit_id_task_index_out_of_range(self):
-        with self.assertRaises(ValueError):
-            main.validate_edit_id(sample_json_data, '8')
+        # Update task status on new task
+        complete_res = self.app.post(f"/todo/complete/{last_task['id']}")
 
-    def test_validate_edit_id_invalid_task_index_as_negative(self):
-        with self.assertRaises(ValueError):
-            main.validate_edit_id(sample_json_data, '-8')
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        last_task = json.loads(res.text)[-1]
+        assert complete_res.status_code == 302
+        assert last_task["status"] == "DONE"
 
-    def test_validate_edit_id_on_empty_list(self):
-        with self.assertRaises(ValueError):
-            main.validate_edit_id(sample_empty_list, '2')
+        # Cleanup new task
+        self.app.get(f"/todo/delete/{last_task['id']}")
+
+    def test_completing_invalid_taskid(self):
+        # Update task status on new task
+        res = self.app.post("/todo/complete/9999")
+        assert res.status_code == 400
 
     """
-    Test the function validate_add_input
+    Test Incompleting feature
     """
 
-    def test_validate_add_input_invalid_task_index_as_number(self):
-        with self.assertRaises(TypeError):
-            main.validate_add_input(5)
+    def test_incompleting_feature(self):
+        # Add one new task to end of list
+        payload = {"task": "TestIncompleteTask"}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        self.app.post("/todo/add", headers=headers, data=payload)
 
-    def test_validate_add_input_invalid_task_index_as_integer(self):
-        with self.assertRaises(TypeError):
-            main.validate_add_input(-3)
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        last_task = json.loads(res.text)[-1]
 
-    def test_validate_add_input_invalid_task_index_as_dict(self):
-        with self.assertRaises(TypeError):
-            main.validate_add_input({"a": "3"})
+        # Update task status on new task
+        complete_res = self.app.post(f"/todo/complete/{last_task['id']}")
 
-    def test_validate_add_input_invalid_task_index_as_empty_string(self):
-        with self.assertRaises(ValueError):
-            main.validate_add_input("")
+        # Test incomplete API
+        incomplete_res = self.app.post(f"/todo/incomplete/{last_task['id']}")
 
-    def test_validate_add_input_invalid_task_index_as_only_spaces(self):
-        with self.assertRaises(ValueError):
-            main.validate_add_input("   ")
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        last_task = json.loads(res.text)[-1]
+        assert incomplete_res.status_code == 302
+        assert last_task["status"] == "TO_DO"
 
-    def test_validate_add_input_invalid_task_index_as_list(self):
-        with self.assertRaises(TypeError):
-            main.validate_add_input([])
+        # Cleanup new task
+        self.app.get(f"/todo/delete/{last_task['id']}")
 
+    def test_incompleting_invalid_taskid(self):
+        # Update task status on new task
+        res = self.app.post("/todo/incomplete/9999")
+        assert res.status_code == 400
 
-if __name__ == '__main__':
-    unittest.main()
+    """
+    Test deleting feature
+    """
+
+    def test_delete_feature(self):
+        # Add one new task to end of list
+        payload = {"task": "TestIncompleteTask"}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        self.app.post("/todo/add", headers=headers, data=payload)
+
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        last_task = json.loads(res.text)[-1]
+
+        # Test incomplete API
+        delete_res = self.app.post(f"/todo/delete/{last_task['id']}")
+
+        # Get task ID of the new task
+        res = self.app.get("/todo")
+        after_delete_last_task = json.loads(res.text)[-1]
+        assert delete_res.status_code == 302
